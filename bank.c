@@ -23,12 +23,12 @@ int transferMoney();
 int addAccount();
 int updateAccount();
 int deleteAccount();
-void showAccounts();
+int showAccounts();
 int showDetails();
+//menu options
 
 int checkFiles();
 int readsStr(char string[], char mode);
-//menu options
 
 int main()
 {
@@ -41,10 +41,7 @@ int main()
                 transferMoney();
                 break;
             case Add:
-                if(addAccount())
-                    printf("\nAccount Sucessfully Created!");
-                else
-                    printf("\nSorry, it's not possible to create the Account :/");
+                addAccount();
                 break;
             case Update:
                 updateAccount();
@@ -96,7 +93,7 @@ int menu()
     if(input == NULL) 
         return 0; 
 
-    //converts to a short
+    //converts to a int
     operation = atoi(input); 
 
     //if it fails to convert
@@ -126,6 +123,7 @@ int addAccount()
         printf("\nInvalid Input!");
         return 0;
     }
+    strupr(newUser.name); //lowercase to upper case
 
     printf("\nType your ID: ");
     if(readsStr(newUser.id, 'n') == 0)
@@ -161,6 +159,8 @@ int addAccount()
     pAccounts = fopen(ACCOUNTS_FPATH, "a");
     fprintf(pAccounts, "%s %s %s %s %s %ld\n", newUser.name, newUser.id, newUser.phone, newUser.birthday, newUser.password, newUser.money);
     fclose(pAccounts);
+
+    printf("\nAccount Sucessfully Added"); 
     return 1;
 }
 
@@ -176,14 +176,119 @@ int deleteAccount()
     FILE *pTemp;
     const char TEMP_FPATH[] = "tempFile.tmp";
 
+    struct accountsInfo file;
+    int i = 0, lineNum = 0;
+    char input[1024];
+
     system("cls");
+    printf("\t\t\t\t    DELETE AN ACCOUNT\n");
+    printf("\t\t------------------------------------------------------\n");
+
+    if(checkFiles() == 0)
+    {
+        printf("\nIt seems it does not have an Account yet :/"); 
+        return 0;
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    while
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+    {
+        i++;
+        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
+    } 
+    fclose(pAccounts);
+    //prints the files data
+
+    printf("\n\nType the Account Number to Delete it: ");
+    fgets(input, 1024, stdin);
+    lineNum = atoi(input); //converts to integer
+
+    if(lineNum < 1 || lineNum > i) //if it is greater than the amount of lines
+    {
+        printf("\nInvalid Input!"); 
+        return 0;
+    }
+    else
+    {
+        pTemp = fopen(TEMP_FPATH, "w"); 
+        i = 0;
+
+        if(checkFiles() == 0 || pTemp == NULL)
+        {
+            printf("\nThe files were deleted");
+            printf("\nIt's not possible to continue.");
+
+            fclose(pAccounts);
+            fclose(pTemp);
+            return 0; 
+        }
+
+        pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+        while
+        (
+            fscanf(pAccounts, "%s %s %s %s %s %ld", 
+            &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money)
+            != EOF
+        )
+        {
+            i++;
+
+            //print in file all accounts except for the one that User wants to delete
+            if(i != lineNum) 
+            {
+                fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                file.name, file.id, file.phone, file.birthday, file.password, file.money);
+            }
+        }
+
+        fclose(pAccounts);
+        fclose(pTemp);
+
+        remove(ACCOUNTS_FPATH);
+        rename(TEMP_FPATH, ACCOUNTS_FPATH);
+        //removes the old file and renames the new one without that account
+
+        printf("\nSuccessfully Removed!"); 
+        return 1; 
+    }
 }
 
-void showAccounts()
+int showAccounts()
 {
+    struct accountsInfo file;
+    char *buffer;
+    int i = 0;
 
     system("cls");
+    printf("\t\t\t\t\tACCOUNTS\n");
+    printf("\t\t------------------------------------------------------\n");
+    
+    if(checkFiles() == 0)
+    {
+        printf("\nIt seems it does not have an Account Yet :/");
+        return 0;
+    }
 
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    while
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+    {
+        i++;
+        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
+    }
+    fclose(pAccounts);
+
+    return 1;
 }
 
 int showDetails()
