@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <conio.h>
 #include <stdlib.h>
+#include <string.h>
 
 FILE *pAccounts;
 const char ACCOUNTS_FPATH[] = "Accounts.txt";
@@ -18,20 +19,20 @@ enum menu {Transfer = 1, Add, Update, Delete, Show, Details, ExitProgram};
 
 int menu();
 
-void transferMoney();
-void addAccount();
-void updateAccount();
-void deleteAccount();
+int transferMoney();
+int addAccount();
+int updateAccount();
+int deleteAccount();
 void showAccounts();
-void showDetails();
+int showDetails();
 
 int checkFiles();
+int readsStr(char string[], char mode);
 //menu options
 
 int main()
 {
     int op;
-
     do
     {
         switch((op = menu())) //reads user input
@@ -40,7 +41,10 @@ int main()
                 transferMoney();
                 break;
             case Add:
-                addAccount();
+                if(addAccount())
+                    printf("\nAccount Sucessfully Created!");
+                else
+                    printf("\nSorry, it's not possible to create the Account :/");
                 break;
             case Update:
                 updateAccount();
@@ -102,33 +106,77 @@ int menu()
         return operation; 
 }
 
-void transferMoney()
+int transferMoney()
 {
 
     system("cls");
 
 }
 
-void addAccount()
+int addAccount()
 {
-    //how it is creating an account, there is no need to stop the program
-    checkFiles(); 
+    struct accountsInfo newUser;
+    char buffer[1024], *end;
 
     system("cls");
+
+    printf("\nType your Name: ");
+    if(readsStr(newUser.name, 'a') == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    printf("\nType your ID: ");
+    if(readsStr(newUser.id, 'n') == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    printf("\nType a Phone Number: ");
+    if(readsStr(newUser.phone, 'n') == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+    
+    printf("\nType your Birthday(dd/mm/yyyy): ");
+    readsStr(newUser.birthday, 'c');
+
+    printf("\nType a Password to your Account: ");
+    readsStr(newUser.password, 'c');
+
+    printf("\nType how much money You want in your account: R$");
+    fgets(buffer, 1024, stdin);
+    newUser.money = strtol(buffer, &end, 10);
+    if(newUser.money <= 0)
+    {
+        printf("\nInvalid Input!");
+        return 0; 
+    }
+
+    checkFiles(); //how it is adding an account there is no need to block the program
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "a");
+    fprintf(pAccounts, "%s %s %s %s %s %ld\n", newUser.name, newUser.id, newUser.phone, newUser.birthday, newUser.password, newUser.money);
+    fclose(pAccounts);
+    return 1;
 }
 
-void updateAccount()
+int updateAccount()
 {
+
     system("cls");
 
 }
 
-void deleteAccount()
+int deleteAccount()
 {
+    FILE *pTemp;
+    const char TEMP_FPATH[] = "tempFile.tmp";
 
     system("cls");
-
-
 }
 
 void showAccounts()
@@ -138,7 +186,7 @@ void showAccounts()
 
 }
 
-void showDetails()
+int showDetails()
 {
 
     system("cls");
@@ -174,5 +222,52 @@ int checkFiles()
     {
         fclose(pAccounts);
         return 1;
+    }
+}
+
+/*
+Reads a string in a certain mode
+- Returns 1, is it can reads correctly in that mode and assigns the input to the string
+- Else, returns 0
+Modes: 
+ - 'c' - accepts all characters
+ - 'a' - accepts alphabets 
+ - 'n' - accepts numbers
+*/
+int readsStr(char string[], char mode)
+{
+    char buffer[1024];
+
+    fgets(buffer, 1024, stdin);
+    buffer[strlen(buffer) - 1] = '\0'; //removes \n in last char
+    
+    switch (mode)
+    {
+        case 'c':
+            strcpy(string, buffer);
+            return 1; 
+
+        case 'a':
+            for(int i = 0; i < strlen(buffer); i++)
+            {
+                if((buffer[i] < 'A' || buffer[i] > 'Z') && (buffer[i] < 'a' || buffer[i] > 'z')) 
+                    return 0;
+            }
+
+            strcpy(string, buffer);
+            return 1;
+
+        case 'n':
+            for(int i = 0; i < strlen(buffer); i++)
+            {
+                if(buffer[i] < '0' || buffer[i] > '9')
+                    return 0;
+            }
+
+            strcpy(string, buffer);
+            return 1;
+        
+        default: 
+            return 0; 
     }
 }
