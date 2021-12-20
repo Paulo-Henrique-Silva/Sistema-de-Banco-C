@@ -6,17 +6,26 @@
 #include <stdlib.h>
 
 FILE *pAccounts;
+const char ACCOUNTS_FPATH[] = "Accounts.txt";
+
+struct accountsInfo 
+{
+    char name[40], id[9], password[25], phone[15], birthday[11]; 
+    long int money;
+};
 
 enum menu {Transfer = 1, Add, Update, Delete, Show, Details, ExitProgram};
 
 int menu();
 
-int transferMoney();
-int addAccount();
-int updateAccount();
-int deleteAccount();
+void transferMoney();
+void addAccount();
+void updateAccount();
+void deleteAccount();
 void showAccounts();
-int showDetails();
+void showDetails();
+
+int checkFiles();
 //menu options
 
 int main()
@@ -28,22 +37,22 @@ int main()
         switch((op = menu())) //reads user input
         {
             case Transfer:
-                //transferMoney();
+                transferMoney();
                 break;
             case Add:
                 addAccount();
                 break;
             case Update:
-                //updateAccount();
+                updateAccount();
                 break;
             case Delete:
-                //deleteAccount();
+                deleteAccount();
                 break;
             case Show:
-                //showAccounts();
+                showAccounts();
                 break;
             case Details:
-                //showDetails();
+                showDetails();
                 break;
             case ExitProgram:
                 printf("\nExiting...");
@@ -66,7 +75,8 @@ int menu()
     int operation = 0;
     char input[1024];
 
-    system("cls");
+    system("cls"); //clean screen
+
     printf("\t\t\tBank Management System");
     printf("\n\n\t\t\t[1] - Transfer Money");
     printf("\n\t\t\t[2] - Add an Account");
@@ -78,44 +88,91 @@ int menu()
     printf("\n\nType your operation: ");
     fgets(input, 1024, stdin);
 
-    if(input == NULL) //if it fails to read the input
+    //if it fails to read the input
+    if(input == NULL) 
         return 0; 
 
-    operation = atoi(input); 
     //converts to a short
+    operation = atoi(input); 
 
-    if(operation == 0) //if it fails to convert
+    //if it fails to convert
+    if(operation == 0) 
         return 0;
     else
         return operation; 
 }
 
-int transferMoney()
+void transferMoney()
 {
+
+    system("cls");
 
 }
 
-int addAccount()
+void addAccount()
 {
+    //how it is creating an account, there is no need to stop the program
+    checkFiles(); 
+
+    system("cls");
+}
+
+void updateAccount()
+{
+    system("cls");
 
 }
 
-int updateAccount()
+void deleteAccount()
 {
 
-}
+    system("cls");
 
-int deleteAccount()
-{
 
 }
 
 void showAccounts()
 {
 
+    system("cls");
+
 }
 
-int showDetails()
+void showDetails()
 {
 
+    system("cls");
+
+}
+
+/*
+Checks if files exist
+- If it returns 0 is means that they're empty or were deleted.
+- Else, it'll return 1.
+*/
+int checkFiles()
+{
+    char firstLine[1024];
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+   
+    //if it was deleted
+    if(pAccounts == NULL) 
+    {
+        fclose(pAccounts);
+
+        pAccounts = fopen(ACCOUNTS_FPATH, "w");
+        fclose(pAccounts);
+
+        return 0;
+    }
+    else if(fgets(firstLine, 1024, pAccounts) == NULL) //if it's empty
+    {
+        fclose(pAccounts);
+        return 0;
+    }
+    else 
+    {
+        fclose(pAccounts);
+        return 1;
+    }
 }
