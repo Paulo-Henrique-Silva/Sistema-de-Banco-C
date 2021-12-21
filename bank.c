@@ -179,9 +179,184 @@ int addAccount()
 
 int updateAccount()
 {
-    char passWord;
-    system("cls");
+    FILE *pTemp;
+    const char TEMP_FPATH[] = "tempFile.tmp";
 
+    struct accountsInfo file;
+
+    char 
+    //log in 
+    typedId[sizeof(file.id)], typedPass_word[sizeof(file.password)],
+
+    //num input from user
+    inputNum[1024], 
+
+    //new infos
+    newName[sizeof(file.name)], newID[sizeof(file.id)], newPhone[sizeof(file.phone)],
+    newBirth[sizeof(file.birthday)], newPass_word[sizeof(file.password)],
+
+    *end; //<- used to convert
+
+    int infoNum;
+    long long newMoney; 
+
+    system("cls");
+    printf("\t\t\t\t    UPDATE AN ACCOUNT\n");
+    printf("\t\t------------------------------------------------------\n");
+
+    //user log in
+
+    printf("\nType your ID: ");
+    if(readsStr(typedId, 'n', sizeof(typedId)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    printf("\nType your Password: ");
+    if(readsStr(typedPass_word, 'c', sizeof(typedPass_word)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    if(checkFiles() == 0)
+    {
+        printf("\nThe files were deleted");
+        printf("\nIt's not possible to continue.");
+        return 0; 
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
+    while //reads file to find the account
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+    {
+        //if the account matches, shows the info.
+        if(strcmp(file.id, typedId) == 0 && strcmp(file.password, typedPass_word) == 0)
+        {
+            system("cls");
+
+            //shows the info and gets the old info
+            printf("\t\t\t\t  ACCOUNT INFO");
+            printf("\n\n\t\t\t\t1 - NAME: %s", strcpy(newName, file.name));
+            printf("\n\n\t\t\t\t2 - ID: %s", strcpy(newID, file.id));
+            printf("\n\n\t\t\t\t3 - PHONE: %s", strcpy(newPhone, file.phone));
+            printf("\n\n\t\t\t\t4 - BIRTHDAY: %s", strcpy(newBirth, file.birthday));
+            printf("\n\n\t\t\t\t5 - PASSWORD: %s", strcpy(newPass_word, file.password));
+            printf("\n\n\t\t\t\t6 - MONEY: R$%ld", newMoney = file.money);
+
+            fclose(pAccounts); 
+
+            printf("\n\nType the Info Number to Change: ");
+            fgets(inputNum, 1024, stdin); //takes user input and converts to an integer
+
+            switch((infoNum = atoi(inputNum))) //goes to change the respective info
+            {
+                case 1:
+                    printf("\nType the new Name: ");
+                    if(readsStr(newName, 'a', sizeof(file.name)) == 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                case 2:
+                    printf("\nType the new ID: ");
+                    if(readsStr(newID, 'n', sizeof(file.id)) == 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                case 3:
+                    printf("\nType the new Phone Number: ");
+                    if(readsStr(newPhone, 'n', sizeof(file.phone)) == 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                case 4:
+                    printf("\nType the new Bithday: ");
+                    if(readsStr(newBirth, 'c', sizeof(file.birthday)) == 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                case 5:
+                    printf("\nType the new Password: ");
+                    if(readsStr(newPass_word, 'c', sizeof(file.password)) == 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                case 6:
+                    printf("\nType the new Amount of Money: R$");
+                    fgets(inputNum, 1024, stdin);
+                    if((newMoney = strtol(inputNum, &end, 10)) <= 0)
+                    {
+                        printf("\nInvalid Input!");
+                        return 0;
+                    }
+                    break;
+                default:
+                    printf("\nInvalid Input");
+                    return 0;
+            }
+
+            pTemp = fopen(TEMP_FPATH, "w"); //creates a tempfile to recreates the info
+
+            if(checkFiles() == 0 || pTemp == NULL)
+            {
+                printf("\nThe files were deleted");
+                printf("\nIt's not possible to continue.");
+
+                fclose(pTemp);
+                remove(TEMP_FPATH);
+                return 0; 
+            }
+
+            pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
+            while 
+            (
+                fscanf(pAccounts, "%s %s %s %s %s %ld", 
+                &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+                != EOF
+            )
+            {
+                //reads from old file and paste in new file, except for the newinfo.
+                if(strcmp(file.id, typedId) == 0 && strcmp(file.password, typedPass_word) == 0)
+                {
+                    fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                    newName, newID, newPhone, newBirth, newPass_word, newMoney);
+                }
+                else
+                {
+                    fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                    file.name, file.id, file.phone, file.birthday, file.password, file.money);
+                }
+            }
+
+            fclose(pAccounts);
+            fclose(pTemp);
+
+            remove(ACCOUNTS_FPATH);
+            rename(TEMP_FPATH, ACCOUNTS_FPATH);
+            //removes the old file and renames the new one with newinfo
+
+            printf("\nUpdate Successfully made!");
+            return 1; //this is always exit the while
+        }
+    } 
+
+    printf("\nSorry it was not possible to Find this Account :/");
+    return 0;
 }
 
 int deleteAccount()
@@ -190,7 +365,7 @@ int deleteAccount()
     const char TEMP_FPATH[] = "tempFile.tmp";
 
     struct accountsInfo file;
-    int i = 0, lineNum = 0;
+    int lineCounter = 0, lineNum = 0;
     char input[1024];
 
     system("cls");
@@ -217,15 +392,14 @@ int deleteAccount()
     else
     {
         pTemp = fopen(TEMP_FPATH, "w"); 
-        i = 0;
 
         if(checkFiles() == 0 || pTemp == NULL)
         {
             printf("\nThe files were deleted");
             printf("\nIt's not possible to continue.");
 
-            fclose(pAccounts);
             fclose(pTemp);
+            remove(TEMP_FPATH);
             return 0; 
         }
 
@@ -238,10 +412,10 @@ int deleteAccount()
             != EOF
         )
         {
-            i++;
+            lineCounter++;
 
             //print in file all accounts except for the one that User wants to delete
-            if(i != lineNum) 
+            if(lineCounter != lineNum) 
             {
                 fprintf(pTemp, "%s %s %s %s %s %ld\n", 
                 file.name, file.id, file.phone, file.birthday, file.password, file.money);
@@ -264,7 +438,6 @@ int showAccounts()
 {
     struct accountsInfo file;
     char *buffer;
-    int i = 0;
 
     system("cls");
     printf("\t\t\t\t\tACCOUNTS\n");
@@ -292,7 +465,7 @@ int showDetails()
 
     if(checkFiles() == 0)
     {
-        printf("\nSorry it seems it does not have an Account yet!");
+        printf("\nSorry it seems it does not have an Account yet ;/");
         return 0;
     }
 
@@ -303,7 +476,7 @@ int showDetails()
         return 0;
     }
 
-    printf("\nType your Pasaword: ");
+    printf("\nType your Password: ");
     if(readsStr(typedPass_word, 'c', sizeof(typedPass_word)) == 0)
     {
         printf("\nInvalid Input!");
@@ -323,7 +496,7 @@ int showDetails()
         {
             system("cls");
             printf("\t\t\t\t\t%s\n", file.name);
-            printf("\t\t------------------------------------------------------\n");
+            printf("\t\t------------------------------------------------------");
             
             printf("\n\n\t\t\t\tID: %s", file.id);
             printf("\n\n\t\t\t\tPHONE: %s", file.phone);
@@ -384,7 +557,7 @@ Modes:
 */
 int readsStr(char *string, char mode, int sizeOf_str)
 {
-    char buffer[sizeOf_str];
+    char buffer[1024];
 
     fgets(buffer, sizeOf_str, stdin);
 
@@ -437,7 +610,7 @@ Show the list of accounts in file
 */
 void showAccount_list(struct accountsInfo file)
 {
-    int i = 0;
+    int lineCounter = 0;
 
     pAccounts = fopen(ACCOUNTS_FPATH, "r");
     while
@@ -447,8 +620,8 @@ void showAccount_list(struct accountsInfo file)
         != EOF
     )
     {
-        i++;//lines counter
-        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
+        lineCounter++;
+        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", lineCounter, file.name, file.phone);
     } 
     fclose(pAccounts);
     //prints the files data
