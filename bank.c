@@ -30,11 +30,12 @@ int showDetails();
 int checkFiles();
 int readsStr(char *string, char mode, int sizeOf_str);
 void showAccount_list(struct accountsInfo file);
-int amountOf_accounts(struct accountsInfo file);
+int amountOf_accounts();
 
 int main()
 {
     int op;
+
     do
     {
         switch((op = menu())) //reads user input
@@ -86,7 +87,7 @@ int menu()
     printf("\n\t\t\t[3] - Update an Account");
     printf("\n\t\t\t[4] - Delete an Account");
     printf("\n\t\t\t[5] - Show Existing Accounts");
-    printf("\n\t\t\t[6] - Show Details of An existing Accounts");
+    printf("\n\t\t\t[6] - Show Details of an Existing Account");
     printf("\n\t\t\t[7] - Exit");
     printf("\n\nType your operation: ");
     fgets(input, 1024, stdin);
@@ -100,9 +101,157 @@ int menu()
 
 int transferMoney()
 {
+    FILE *pTemp;
+    const char TEMP_FPATH[] = "tempFile.tmp";
+
+    struct accountsInfo user, file;
+
+    char 
+    typedId[sizeof(user.id)], typedPass_word[sizeof(user.password)], 
+    numInput[1024], *end;
+
+    int giverAccount_num, receiverAccount_num, lineCounter = 0; 
+    long long moneyTo_transfer;
 
     system("cls");
+    printf("\t\t\t\tTRANSFER MONEY\n");
+    printf("\t\t------------------------------------------------------\n");
 
+    if(amountOf_accounts() < 2) 
+    {
+        printf("\nIt needs at least two Accounts!");
+        return 0; 
+    }
+
+    //log in
+    printf("\nType your ID: ");
+    if(readsStr(typedId, 'n', sizeof(typedId)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    printf("\nType your Password: ");
+    if(readsStr(typedPass_word, 'c', sizeof(typedPass_word)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    if(checkFiles() == 0)
+    {
+        printf("\nIt seems it does not have an Account yet :/");
+        return 0; 
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
+    while //reads file to find the account
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &user.name, &user.id, &user.phone, &user.birthday, &user.password, &user.money) 
+        != EOF
+    )
+    {
+        lineCounter++;
+        
+        //if it matches the account
+        if(strcmp(user.id, typedId) == 0 && strcmp(user.password, typedPass_word) == 0)
+        {
+            giverAccount_num = lineCounter;
+            fclose(pAccounts);
+
+            system("cls");
+            showAccount_list(user);
+
+            printf("\n\nType the Account number you want to tranfer: ");
+            fgets(numInput, 1024, stdin);
+            if
+            (
+                (receiverAccount_num = atoi(numInput)) == 0 || 
+                receiverAccount_num > amountOf_accounts() ||
+                receiverAccount_num == giverAccount_num
+            )
+            {
+                printf("\nInvalid Input!");
+                return 0; 
+            }
+
+            printf("\nAvailable Money: R$%ld", user.money);
+            printf("\nType the Amount of money you want to Transfer: R$");
+            fgets(numInput, 1024, stdin);
+            if
+            (
+                (moneyTo_transfer = strtol(numInput, &end, 10)) <= 0 
+                || moneyTo_transfer > user.money
+            )
+            {
+                printf("\nInvalid Input!");
+                return 0; 
+            }
+
+            pTemp = fopen(TEMP_FPATH, "w"); //creates a tempfile to update the money
+            if(checkFiles() == 0 || pTemp == NULL)
+            {
+                printf("\nThe files were deleted");
+                printf("\nIt's not possible to continue.");
+
+                fclose(pTemp);
+                remove(TEMP_FPATH);
+                return 0; 
+            }
+
+            pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
+            lineCounter = 0; //resets line counter
+
+            while 
+            (
+                fscanf(pAccounts, "%s %s %s %s %s %ld", 
+                &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+                != EOF
+            )
+            {
+                lineCounter++;
+                
+                /*
+                prints all the info.
+                - If it is the giver, removes the amount of money from total in file
+                - If it is the receiver, adds the amount of money from total in file
+                - else, just prints the infos.
+                */
+                if(lineCounter == giverAccount_num)
+                {
+                    fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                    file.name, file.id, file.phone, file.birthday, file.password, 
+                    file.money - moneyTo_transfer);
+                }
+                else if(lineCounter == receiverAccount_num)
+                {
+                    fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                    file.name, file.id, file.phone, file.birthday, file.password, 
+                    file.money + moneyTo_transfer);
+                }
+                else
+                {
+                    fprintf(pTemp, "%s %s %s %s %s %ld\n", 
+                    file.name, file.id, file.phone, file.birthday, file.password, 
+                    file.money);
+                }
+            }
+
+            fclose(pAccounts);
+            fclose(pTemp);
+
+            remove(ACCOUNTS_FPATH);
+            rename(TEMP_FPATH, ACCOUNTS_FPATH);
+            //removes the old file and renames the new one with newinfo
+
+            printf("\nTransaction Successfully made!");
+            return 1; //this is always exit the while
+        }
+    }
+
+    printf("\nSorry, it was not possible to find this Account :/");
+    return 0; 
 }
 
 int addAccount()
@@ -111,6 +260,14 @@ int addAccount()
     char buffer[1024], *end;
 
     system("cls");
+    printf("\t\t\t\tADD AN ACCOUNT\n");
+    printf("\t\t------------------------------------------------------\n");
+
+    if(amountOf_accounts() == 10) 
+    {
+        printf("\nSorry, max amount of Accounts reached! (10)");
+        return 0; 
+    }
 
     printf("\nType your First Name: ");
     if(readsStr(newUser.name, 'a', sizeof(newUser.name)) == 0)
@@ -155,13 +312,12 @@ int addAccount()
     if(readsStr(newUser.password, 'c', sizeof(newUser.password)) == 0)
     {
         printf("\nInvalid Input! DO NOT TYPE:");  
-        printf("\n- Passawords bigger than %d chars", sizeof(newUser.birthday) - 1);  
+        printf("\n- Passwords bigger than %d chars", sizeof(newUser.birthday) - 1);  
     }
 
     printf("\nType how much money You want in your account: R$");
     fgets(buffer, 1024, stdin);
-    newUser.money = strtol(buffer, &end, 10);
-    if(newUser.money <= 0)
+    if((newUser.money = strtol(buffer, &end, 10)) <= 0)
     {
         printf("\nInvalid Input!");
         return 0; 
@@ -222,8 +378,7 @@ int updateAccount()
 
     if(checkFiles() == 0)
     {
-        printf("\nThe files were deleted");
-        printf("\nIt's not possible to continue.");
+        printf("\nIt seems it does not have an Account yet :/");
         return 0; 
     }
 
@@ -263,6 +418,7 @@ int updateAccount()
                         printf("\nInvalid Input!");
                         return 0;
                     }
+                    strupr(newName);
                     break;
                 case 2:
                     printf("\nType the new ID: ");
@@ -384,7 +540,7 @@ int deleteAccount()
     fgets(input, 1024, stdin);
     lineNum = atoi(input); //converts to integer
 
-    if(lineNum <= 0 || lineNum > amountOf_accounts(file)) //if it is greater than the amount of lines
+    if(lineNum <= 0 || lineNum > amountOf_accounts()) //if it is greater than the amount of lines
     {
         printf("\nInvalid Input!"); 
         return 0;
@@ -465,7 +621,7 @@ int showDetails()
 
     if(checkFiles() == 0)
     {
-        printf("\nSorry it seems it does not have an Account yet ;/");
+        printf("\nIt seems it does not have an Account yet :/");
         return 0;
     }
 
@@ -630,18 +786,14 @@ void showAccount_list(struct accountsInfo file)
 /*
 Returns the amount of lines(Accounts in file)
 */
-int amountOf_accounts(struct accountsInfo file)
+int amountOf_accounts()
 {
     int amountOf_lines = 0;
+    char line[1024];
 
     pAccounts = fopen(ACCOUNTS_FPATH, "r");
 
-    while
-    (
-        fscanf(pAccounts, "%s %s %s %s %s %ld", 
-        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
-        != EOF
-    )
+    while(fgets(line, 1024, pAccounts) != NULL)
         amountOf_lines++;
 
     fclose(pAccounts);
