@@ -29,6 +29,8 @@ int showDetails();
 
 int checkFiles();
 int readsStr(char *string, char mode, int sizeOf_str);
+void showAccount_list(struct accountsInfo file);
+int amountOf_accounts(struct accountsInfo file);
 
 int main()
 {
@@ -89,15 +91,8 @@ int menu()
     printf("\n\nType your operation: ");
     fgets(input, 1024, stdin);
 
-    //if it fails to read the input
-    if(input == NULL) 
-        return 0; 
-
-    //converts to a int
-    operation = atoi(input); 
-
     //if it fails to convert
-    if(operation == 0) 
+    if((operation = atoi(input)) == 0) 
         return 0;
     else
         return operation; 
@@ -123,7 +118,8 @@ int addAccount()
         printf("\nInvalid Input! DO NOT TYPE:");
         printf("\n - Blank spaces");
         printf("\n - Not alphabet chars");
-        printf("\n - Names bigger than %d chars.", sizeof(newUser.name));
+        printf("\n - Names bigger than %d chars.", sizeof(newUser.name) - 1);
+        //-1 because it has the last char '\0'
         return 0;
     }
     strupr(newUser.name); //lowercase to upper case
@@ -134,7 +130,7 @@ int addAccount()
         printf("\nInvalid Input! DO NOT TYPE:");
         printf("\n - Blank spaces");
         printf("\n - Not Numeric chars");
-        printf("\n - Ids bigger than %d chars.", sizeof(newUser.id));
+        printf("\n - Ids bigger than %d chars.", sizeof(newUser.id) - 1);
         return 0;
     }
 
@@ -144,7 +140,7 @@ int addAccount()
         printf("\nInvalid Input! DO NOT TYPE:");
         printf("\n - Blank spaces");
         printf("\n - Not Numeric chars");
-        printf("\n - Phone Numbers bigger than %d chars.", sizeof(newUser.phone));
+        printf("\n - Phone Numbers bigger than %d chars.", sizeof(newUser.phone) - 1);
         return 0;
     }
     
@@ -152,14 +148,14 @@ int addAccount()
     if(readsStr(newUser.birthday, 'c', sizeof(newUser.birthday)) == 0)
     {
       printf("\nInvalid Input! DO NOT TYPE:");  
-      printf("\n- Dates bigger than %d chars", sizeof(newUser.birthday));  
+      printf("\n- Dates bigger than %d chars", sizeof(newUser.birthday) - 1);  
     }
 
     printf("\nType a Password to your Account: ");
     if(readsStr(newUser.password, 'c', sizeof(newUser.password)) == 0)
     {
         printf("\nInvalid Input! DO NOT TYPE:");  
-        printf("\n- Passawords bigger than %d chars", sizeof(newUser.birthday));  
+        printf("\n- Passawords bigger than %d chars", sizeof(newUser.birthday) - 1);  
     }
 
     printf("\nType how much money You want in your account: R$");
@@ -207,25 +203,13 @@ int deleteAccount()
         return 0;
     }
 
-    pAccounts = fopen(ACCOUNTS_FPATH, "r");
-    while
-    (
-        fscanf(pAccounts, "%s %s %s %s %s %ld", 
-        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
-        != EOF
-    )
-    {
-        i++;
-        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
-    } 
-    fclose(pAccounts);
-    //prints the files data
+    showAccount_list(file);
 
     printf("\n\nType the Account Number to Delete it: ");
     fgets(input, 1024, stdin);
     lineNum = atoi(input); //converts to integer
 
-    if(lineNum < 1 || lineNum > i) //if it is greater than the amount of lines
+    if(lineNum <= 0 || lineNum > amountOf_accounts(file)) //if it is greater than the amount of lines
     {
         printf("\nInvalid Input!"); 
         return 0;
@@ -292,7 +276,41 @@ int showAccounts()
         return 0;
     }
 
-    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    showAccount_list(file);
+
+    return 1;
+}
+
+int showDetails()
+{
+    struct accountsInfo file;
+    char typedId[sizeof(file.id)], typedPass_word[sizeof(file.password)];
+
+    system("cls");
+    printf("\t\t\t\t\tDETAILS\n");
+    printf("\t\t------------------------------------------------------\n");
+
+    if(checkFiles() == 0)
+    {
+        printf("\nSorry it seems it does not have an Account yet!");
+        return 0;
+    }
+
+    printf("\nType your ID: ");
+    if(readsStr(typedId, 'n', sizeof(typedId)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    printf("\nType your Pasaword: ");
+    if(readsStr(typedPass_word, 'c', sizeof(typedPass_word)) == 0)
+    {
+        printf("\nInvalid Input!");
+        return 0;
+    }
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r"); 
     while
     (
         fscanf(pAccounts, "%s %s %s %s %s %ld", 
@@ -300,19 +318,27 @@ int showAccounts()
         != EOF
     )
     {
-        i++;
-        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
+        //if the account matches, shows the info.
+        if(strcmp(file.id, typedId) == 0 && strcmp(file.password, typedPass_word) == 0)
+        {
+            system("cls");
+            printf("\t\t\t\t\t%s\n", file.name);
+            printf("\t\t------------------------------------------------------\n");
+            
+            printf("\n\n\t\t\t\tID: %s", file.id);
+            printf("\n\n\t\t\t\tPHONE: %s", file.phone);
+            printf("\n\n\t\t\t\tBIRTHDAY: %s", file.birthday);
+            printf("\n\n\t\t\t\tPASSWORD: %s", file.password);
+            printf("\n\n\t\t\t\tMONEY: R$%ld", file.money);
+
+            fclose(pAccounts);
+            return 1;
+        }
     }
     fclose(pAccounts);
 
-    return 1;
-}
-
-int showDetails()
-{
-
-    system("cls");
-
+    printf("\nSorry it was not possible to Find this Account :/");
+    return 0;
 }
 
 /*
@@ -403,4 +429,49 @@ int readsStr(char *string, char mode, int sizeOf_str)
         default: 
             return 0; 
     }
+}
+
+/*
+Show the list of accounts in file
+ - Check if the file was deleted before use it
+*/
+void showAccount_list(struct accountsInfo file)
+{
+    int i = 0;
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+    while
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+    {
+        i++;//lines counter
+        printf("\t\t\tNUMBER: %d - NAME: %s - PHONE: %s\n\n", i, file.name, file.phone);
+    } 
+    fclose(pAccounts);
+    //prints the files data
+}
+
+/*
+Returns the amount of lines(Accounts in file)
+*/
+int amountOf_accounts(struct accountsInfo file)
+{
+    int amountOf_lines = 0;
+
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+    while
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+        amountOf_lines++;
+
+    fclose(pAccounts);
+
+    return amountOf_lines;
 }
