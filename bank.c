@@ -721,7 +721,7 @@ int readsStr(char *string, char mode, int sizeOf_str)
     {
         char extra_chars;
 
-        while((extra_chars = getc(stdin) != '\n' && extra_chars != EOF)); 
+        while((extra_chars = getc(stdin)) != '\n' && extra_chars != EOF); 
         //colects the extra chars to avoid errors
 
         return 0;
