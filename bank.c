@@ -11,7 +11,7 @@ const char ACCOUNTS_FPATH[] = "Accounts.txt";
 
 struct accountsInfo 
 {
-    char name[40], id[9], password[25], phone[15], birthday[11]; 
+    char name[15], id[9], password[25], phone[15], birthday[12]; 
     long int money;
 };
 
@@ -28,7 +28,7 @@ int showDetails();
 //menu options
 
 int checkFiles();
-int readsStr(char string[], char mode);
+int readsStr(char *string, char mode, int sizeOf_str);
 
 int main()
 {
@@ -117,33 +117,50 @@ int addAccount()
 
     system("cls");
 
-    printf("\nType your Name: ");
-    if(readsStr(newUser.name, 'a') == 0)
+    printf("\nType your First Name: ");
+    if(readsStr(newUser.name, 'a', sizeof(newUser.name)) == 0)
     {
-        printf("\nInvalid Input!");
+        printf("\nInvalid Input! DO NOT TYPE:");
+        printf("\n - Blank spaces");
+        printf("\n - Not alphabet chars");
+        printf("\n - Names bigger than %d chars.", sizeof(newUser.name));
         return 0;
     }
     strupr(newUser.name); //lowercase to upper case
 
     printf("\nType your ID: ");
-    if(readsStr(newUser.id, 'n') == 0)
+    if(readsStr(newUser.id, 'n', sizeof(newUser.id)) == 0)
     {
-        printf("\nInvalid Input!");
+        printf("\nInvalid Input! DO NOT TYPE:");
+        printf("\n - Blank spaces");
+        printf("\n - Not Numeric chars");
+        printf("\n - Ids bigger than %d chars.", sizeof(newUser.id));
         return 0;
     }
 
     printf("\nType a Phone Number: ");
-    if(readsStr(newUser.phone, 'n') == 0)
+    if(readsStr(newUser.phone, 'n', sizeof(newUser.phone)) == 0)
     {
-        printf("\nInvalid Input!");
+        printf("\nInvalid Input! DO NOT TYPE:");
+        printf("\n - Blank spaces");
+        printf("\n - Not Numeric chars");
+        printf("\n - Phone Numbers bigger than %d chars.", sizeof(newUser.phone));
         return 0;
     }
     
     printf("\nType your Birthday(dd/mm/yyyy): ");
-    readsStr(newUser.birthday, 'c');
+    if(readsStr(newUser.birthday, 'c', sizeof(newUser.birthday)) == 0)
+    {
+      printf("\nInvalid Input! DO NOT TYPE:");  
+      printf("\n- Dates bigger than %d chars", sizeof(newUser.birthday));  
+    }
 
     printf("\nType a Password to your Account: ");
-    readsStr(newUser.password, 'c');
+    if(readsStr(newUser.password, 'c', sizeof(newUser.password)) == 0)
+    {
+        printf("\nInvalid Input! DO NOT TYPE:");  
+        printf("\n- Passawords bigger than %d chars", sizeof(newUser.birthday));  
+    }
 
     printf("\nType how much money You want in your account: R$");
     fgets(buffer, 1024, stdin);
@@ -166,7 +183,7 @@ int addAccount()
 
 int updateAccount()
 {
-
+    char passWord;
     system("cls");
 
 }
@@ -331,19 +348,30 @@ int checkFiles()
 }
 
 /*
-Reads a string in a certain mode
-- Returns 1, is it can reads correctly in that mode and assigns the input to the string
+Reads a string with a specific size, in a certain mode
+- Returns 1, if it can reads correctly in that mode and assigns the input to the string
 - Else, returns 0
 Modes: 
  - 'c' - accepts all characters
  - 'a' - accepts alphabets 
  - 'n' - accepts numbers
 */
-int readsStr(char string[], char mode)
+int readsStr(char *string, char mode, int sizeOf_str)
 {
-    char buffer[1024];
+    char buffer[sizeOf_str];
 
-    fgets(buffer, 1024, stdin);
+    fgets(buffer, sizeOf_str, stdin);
+
+    if(strchr(buffer, '\n') == NULL) //checks if the input is bigger than size of str
+    {
+        char extra_chars;
+
+        while((extra_chars = getc(stdin) != '\n' && extra_chars != EOF)); 
+        //colects the extra chars to avoid errors
+
+        return 0;
+    }
+
     buffer[strlen(buffer) - 1] = '\0'; //removes \n in last char
     
     switch (mode)
