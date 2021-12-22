@@ -253,6 +253,7 @@ int transferMoney()
     }
 
     printf("\nSorry, it was not possible to find this Account :/");
+    fclose(pAccounts);
     return 0; 
 }
 
@@ -519,6 +520,7 @@ int updateAccount()
     } 
 
     printf("\nSorry it was not possible to Find this Account :/");
+    fclose(pAccounts);
     return 0;
 }
 
@@ -671,9 +673,10 @@ int showDetails()
             return 1;
         }
     }
-    fclose(pAccounts);
 
     printf("\nSorry it was not possible to Find this Account :/");
+
+    fclose(pAccounts);
     return 0;
 }
 
