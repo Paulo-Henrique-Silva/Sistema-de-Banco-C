@@ -32,6 +32,8 @@ int readsStr(char *string, char mode, int sizeOf_str);
 void showAccount_list(struct accountsInfo file);
 int amountOf_accounts();
 
+int isA_validId(char *id, struct accountsInfo file);
+
 int main()
 {
     int op;
@@ -282,9 +284,14 @@ int addAccount()
     strupr(newUser.name); //lowercase to upper case
 
     printf("\nType your ID: ");
-    if(readsStr(newUser.id, 'n', sizeof(newUser.id)) == 0)
+    if
+    (
+        readsStr(newUser.id, 'n', sizeof(newUser.id)) == 0 || 
+        isA_validId(newUser.id, newUser) == 0
+    )
     {
         printf("\nInvalid Input! DO NOT TYPE:");
+        printf("\n - Repeated IDs");
         printf("\n - Blank spaces");
         printf("\n - Not Numeric chars");
         printf("\n - Ids bigger than %d chars.", sizeof(newUser.id) - 1);
@@ -799,4 +806,29 @@ int amountOf_accounts()
     fclose(pAccounts);
 
     return amountOf_lines;
+}
+
+/*
+    Checks if the id repeated
+    - Returns 0 if it repeated 
+    - else, returns 1
+*/
+int isA_validId(char *id, struct accountsInfo file)
+{
+    pAccounts = fopen(ACCOUNTS_FPATH, "r");
+
+    while
+    (
+        fscanf(pAccounts, "%s %s %s %s %s %ld", 
+        &file.name, &file.id, &file.phone, &file.birthday, &file.password, &file.money) 
+        != EOF
+    )
+    {
+        if(strcmp(id, file.id) == 0) 
+            return 0;
+    } 
+
+    fclose(pAccounts);
+
+    return 1;
 }
